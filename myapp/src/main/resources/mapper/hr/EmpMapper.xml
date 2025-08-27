@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "mybatis-3-mapper.dtd">
+<mapper namespace="com.example.myapp.hr.dao.IEmpRepository">
+
+  <select id="getEmpCount" resultType="int">
+    SELECT COUNT(*) FROM employees
+  </select>
+
+  <select id="getEmpInfo" parameterType="int" resultType="map">
+    SELECT employee_id, first_name, last_name, email, phone_number,
+           hire_date, job_id, salary, commission_pct, manager_id, department_id
+    FROM employees
+    WHERE employee_id = #{empid}
+  </select>
+
+</mapper>

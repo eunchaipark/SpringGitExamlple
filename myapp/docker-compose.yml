@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  spring-git-image:
+    build: .
+    container_name: spring-git-container
+    ports:
+      - "9090:9090"

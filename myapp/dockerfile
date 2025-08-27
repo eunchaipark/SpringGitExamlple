@@ -1,0 +1,12 @@
+FROM openjdk:21-jdk-slim
+
+WORKDIR /app
+
+# 빌드된 JAR 파일을 컨테이너로 복사
+COPY target/SpringGitExample.jar /app/SpringGitExample.jar
+
+# 포트 오픈
+EXPOSE 9090
+
+# 애플리케이션 실행
+ENTRYPOINT ["java", "-jar", "/app/SpringGitExample.jar"]
