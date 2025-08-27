@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: self-hosted
+    
+    env:
+      DOCKER_HOST: tcp://${{ secrets.DOCKER-HOST }}:${{ secrets.DOCKER_PORT }}
 
     steps:
       # 1. 프로젝트 체크아웃
@@ -30,6 +33,10 @@ jobs:
         shell: powershell
         run: |
           $containerName = "${{ secrets.DOCKER_CONTAINER_NAME }}"
+          if ([string]::IsNullOrWhiteSpace($containerName)) {
+            Write-Host "Warning: DOCKER_CONTAINER_NAME secret is not set or empty"
+            exit 0
+          }
           $existingContainer = docker ps -a --filter "name=$containerName" --format "{{.Names}}"
           if ($existingContainer -eq $containerName) {
             Write-Host "Stopping and removing container: $containerName"
@@ -44,10 +51,19 @@ jobs:
         shell: powershell
         run: |
           $imageName = "${{ secrets.DOCKER_IMAGE_NAME }}"
+          if ([string]::IsNullOrWhiteSpace($imageName)) {
+            Write-Host "Warning: DOCKER_IMAGE_NAME secret is not set or empty"
+            exit 0
+          }
           try {
             Write-Host "Attempting to remove image: $imageName"
-            docker rmi -f $imageName
-            Write-Host "Image $imageName removed successfully."
+            $imageExists = docker images -q $imageName
+            if ($imageExists) {
+              docker rmi -f $imageName
+              Write-Host "Image $imageName removed successfully."
+            } else {
+              Write-Host "Image $imageName does not exist."
+            }
           } catch {
             Write-Host "Failed to remove image: $imageName"
             Write-Host "Error: $_"
