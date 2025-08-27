@@ -17,7 +17,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. JDK 설정 및 Maven 빌드
+      # 2-1. Docker 연결 테스트
+      - name: Test Docker connection
+        shell: powershell
+        run: |
+          Write-Host "Testing Docker connection..."
+          Write-Host "DOCKER_HOST: $env:DOCKER_HOST"
+          try {
+            docker version
+            docker info
+            Write-Host "Docker connection successful!"
+          } catch {
+            Write-Host "Docker connection failed: $_"
+            Write-Host "Please check if Docker daemon is running"
+            exit 1
+          }
+
+      # 2-2. JDK 설정 및 Maven 빌드
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -72,16 +88,30 @@ jobs:
       # 5. Docker 이미지 빌드
       - name: Build Docker image
         working-directory: ./myapp
+        shell: powershell
         run: |
-          docker build -t ${{ secrets.DOCKER_IMAGE_NAME }} .
+          $imageName = "${{ secrets.DOCKER_IMAGE_NAME }}"
+          Write-Host "Image name: '$imageName'"
+          if ([string]::IsNullOrWhiteSpace($imageName)) {
+            Write-Host "Error: DOCKER_IMAGE_NAME secret is not set or empty"
+            exit 1
+          }
+          Write-Host "Building Docker image: $imageName"
+          docker build -t $imageName .
 
       # 6. 새 Docker 컨테이너 실행
       - name: Run new Docker container
+        shell: powershell
         run: |
-          docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -p 9090:9090 ${{ secrets.DOCKER_IMAGE_NAME }}
+          $imageName = "${{ secrets.DOCKER_IMAGE_NAME }}"
+          $containerName = "${{ secrets.DOCKER_CONTAINER_NAME }}"
+          Write-Host "Running container '$containerName' from image '$imageName'"
+          if ([string]::IsNullOrWhiteSpace($imageName) -or [string]::IsNullOrWhiteSpace($containerName)) {
+            Write-Host "Error: DOCKER_IMAGE_NAME or DOCKER_CONTAINER_NAME secret is not set"
+            exit 1
+          }
+          docker run -d --name $containerName -p 9090:9090 $imageName
 
       # 7. 컨테이너 상태 확인
       - name: Check running containers
         run: docker ps
-
-        
