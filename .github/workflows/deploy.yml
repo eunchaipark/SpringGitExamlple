@@ -22,6 +22,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build project with Maven
+        working-directory: ./myapp
         run: mvn clean package
 
       # 3. 기존 Docker 컨테이너 중지 및 삭제
@@ -54,6 +55,7 @@ jobs:
 
       # 5. Docker 이미지 빌드
       - name: Build Docker image
+        working-directory: ./myapp
         run: |
           docker build -t ${{ secrets.DOCKER_IMAGE_NAME }} .
 
